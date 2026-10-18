@@ -13,6 +13,7 @@ from app import (
     OP_INFO,
     REPORT_ID_0_PIDS,
     SCREEN_SIZES,
+    YunziScreen,
     adjust_brightness,
     build_report,
     crc16_modbus,
@@ -84,6 +85,32 @@ class ProtocolTests(unittest.TestCase):
         self.assertIn(inner_packet(18, 2, b"\x00\x00"), sent_packets)
         self.assertIn(inner_packet(19, 2, b"\x00\x0a"), sent_packets)
         self.assertIn(inner_packet(16, 3, b"\x02\x00\x00"), sent_packets)
+
+    def test_upload_startup_image_as_single_frame_boot_animation(self):
+        screen = KeyboardScreen.__new__(KeyboardScreen)
+        screen.send = Mock()
+        screen.finish = Mock()
+        pixels = b"\x12\x34"
+        with patch("app.time.sleep"):
+            screen.upload_startup_image(pixels, Mock())
+        sent_packets = [call.args[1] for call in screen.send.call_args_list]
+        self.assertIn(inner_packet(18, 2, b"\x00\x01"), sent_packets)
+        self.assertIn(inner_packet(19, 2, b"\x00\x01"), sent_packets)
+        self.assertIn(inner_packet(16, 3, b"\x02\x00\x00"), sent_packets)
+        self.assertIn(inner_packet(17, len(pixels)), sent_packets)
+        self.assertIn(pixels, sent_packets)
+
+    def test_setting_brightness_synchronizes_value_label_and_preview(self):
+        app = YunziScreen.__new__(YunziScreen)
+        app.brightness_var = Mock()
+        app.brightness_label_var = Mock()
+        app._update_preview = Mock()
+
+        app._set_brightness(100)
+
+        app.brightness_var.set.assert_called_once_with(100)
+        app.brightness_label_var.set.assert_called_once_with("100%")
+        app._update_preview.assert_called_once_with()
 
     def test_sync_time_sends_local_clock_and_date(self):
         screen = KeyboardScreen.__new__(KeyboardScreen)

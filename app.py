@@ -296,6 +296,9 @@ class KeyboardScreen:
         self.send(OP_DATA, pixels)
         self.finish()
 
+    def upload_startup_image(self, pixels: bytes, progress: Callable[[str], None]) -> None:
+        self.upload_animation([pixels], gif_type=0, fps=1, progress=progress)
+
     def upload_animation(
         self,
         frames: list[bytes],
@@ -360,7 +363,7 @@ class YunziScreen:
         self.fps_var = tk.StringVar(value="10")
         self.brightness_var = tk.IntVar(value=100)
         self.brightness_label_var = tk.StringVar(value="100%")
-        self.replace_var = tk.BooleanVar(value=False)
+        self.power_on_image_var = tk.BooleanVar(value=False)
         self.file_var = tk.StringVar(value="No image selected")
         self.status_var = tk.StringVar(value="Connect your keyboard, then refresh devices.")
 
@@ -548,18 +551,14 @@ class YunziScreen:
         self.animation_destination_combo.pack(side="left")
         ttk.Label(options, text="FPS").pack(side="left", padx=(12, 6))
         ttk.Spinbox(options, textvariable=self.fps_var, from_=1, to=60, width=5).pack(side="left")
-        ttk.Checkbutton(
+        self.power_on_image_check = ttk.Checkbutton(
             file_box,
-            text="Replace existing picture(s) before uploading (clears all 16 slots)",
-            variable=self.replace_var,
-        ).grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
-        ttk.Label(
-            file_box,
-            text="Each GIF destination stores one animation; a new upload replaces its previous GIF.",
-            style="Secondary.TLabel",
-        ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(5, 0))
+            text="Also set this still image as the power-on display (replaces startup GIF)",
+            variable=self.power_on_image_var,
+        )
+        self.power_on_image_check.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
         brightness_row = ttk.Frame(file_box)
-        brightness_row.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        brightness_row.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(5, 0))
         ttk.Label(brightness_row, text="Image brightness").pack(side="left")
         self.brightness_scale = ttk.Scale(
             brightness_row,
@@ -599,7 +598,7 @@ class YunziScreen:
             ("Upload GIF", lambda: self._upload("gif"), "Accent.TButton"),
             ("Clear images", self._clear_pictures, "TButton"),
             ("Clear GIF", self._clear_gif, "TButton"),
-            ("Clear startup image/GIF", self._clear_startup_gif, "TButton"),
+            ("Clear power-on animation", self._clear_startup_gif, "TButton"),
         )
         for index, (label, callback, button_style) in enumerate(action_specs):
             button = ttk.Button(actions, text=label, command=callback, style=button_style)
@@ -679,8 +678,9 @@ class YunziScreen:
                 image.seek(0)
                 self.preview_source = image.convert("RGB")
                 self.preview_source.thumbnail((560, 70), Image.Resampling.LANCZOS)
-            self.brightness_var.set(100)
+            self._set_brightness(100)
             self.brightness_scale.configure(state="disabled" if self.selected_is_gif else "normal")
+            self.power_on_image_check.configure(state="disabled" if self.selected_is_gif else "normal")
             self._update_preview()
             if fps is not None:
                 self.fps_var.set(str(fps))
@@ -692,7 +692,9 @@ class YunziScreen:
             messagebox.showerror("Invalid image", str(exc), parent=self.root)
 
     def _brightness_changed(self, value: str) -> None:
-        brightness = round(float(value))
+        self._set_brightness(round(float(value)))
+
+    def _set_brightness(self, brightness: int) -> None:
         self.brightness_var.set(brightness)
         self.brightness_label_var.set(f"{brightness}%")
         self._update_preview()
@@ -778,7 +780,7 @@ class YunziScreen:
 
         path = self.selected_path
         mode = self.mode_var.get()
-        replace = self.replace_var.get()
+        set_power_on_image = self.power_on_image_var.get() and kind == "image"
         gif_type, frame_limit = ANIMATION_DESTINATIONS[self.animation_destination_var.get()]
 
         def operation() -> None:
@@ -797,9 +799,12 @@ class YunziScreen:
                     image = adjust_brightness(image, self.brightness_var.get())
                     pixels = to_rgb565(image)
                     with KeyboardScreen(device, report_id) as screen:
-                        if replace:
-                            screen.clear_picture(clear_all=True)
                         screen.upload_picture(pixels)
+                        if set_power_on_image:
+                            screen.upload_startup_image(
+                                pixels,
+                                lambda text: self.messages.put(("progress", text)),
+                            )
 
         self._start_operation(f"Uploading {kind}…", operation)
 
@@ -838,8 +843,8 @@ class YunziScreen:
         if not messagebox.askyesno(
             f"Clear {destination.lower()}?",
             (
-                "This clears the boot-animation slot, including a still or single-frame "
-                "startup image."
+                "This clears only the boot-animation slot. Static images uploaded with "
+                "Upload image are stored separately."
                 if destination == "Power-on animation"
                 else f"This clears the animation stored as the {destination.lower()}."
             ),

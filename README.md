@@ -24,14 +24,16 @@ Run `build.bat` after `install.bat`. It installs the build tools in the app's `.
 - Adjust still-image brightness from 0% to 200% before upload; GIF animation frames are not brightness-adjusted.
 - Convert frames to the keyboard's RGB565 pixel format.
 - Choose a GIF destination: the GIF page (up to 160 frames) or the power-on animation (up to 64 frames); choose playback speed (1–60 FPS).
-- Append pictures or explicitly replace all picture slots; clear all images, the GIF-page animation, or the startup image/animation independently; switch display pages.
+- Append pictures; clear all images, the GIF-page animation, or the power-on animation independently; switch display pages.
 - Sync the keyboard's date and time from the PC's local clock.
 - Edit screen dimensions and report ID for models not listed in the known-device table.
 - Dark desktop theme with pink button hover highlights and a fixed-size image preview.
 
 ## Choosing and uploading files
 
-The **Image or GIF** section only chooses a file and displays a local preview; it does not send anything to the keyboard. For a still image, use **Image brightness** to adjust the image itself from 0% (black) to 200% (twice as bright); 100% leaves it unchanged. This is not the keyboard backlight control. The preview reflects the adjustment and **Upload image** applies it before sending the image to the keyboard. GIF uploads are not brightness-adjusted. Click **Upload image** to store the selected still image, or **Upload GIF** to store its animation. The keyboard has one animation slot per destination: each new GIF uploaded to the GIF page replaces the previous GIF-page animation, and each new startup GIF replaces the previous startup animation. Standard images work differently: each upload without **Replace existing picture(s)** checked is added as another picture slot, so repeated clicks can create duplicate entries. Check **Replace existing picture(s)** to clear all 16 picture slots before uploading one image instead.
+The **Image or GIF** section only chooses a file and displays a local preview; it does not send anything to the keyboard. For a still image, use **Image brightness** to adjust the image itself from 0% (black) to 200% (twice as bright); 100% leaves it unchanged. This is not the keyboard backlight control. The preview reflects the adjustment and **Upload image** applies it before sending the image to the keyboard. GIF uploads are not brightness-adjusted. Click **Upload image** to store the selected still image, or **Upload GIF** to store its animation. The picture gallery supports multiple still-image slots, and each still-image upload adds another slot; repeated uploads can create duplicate entries. **Clear images** clears the stored picture slots. GIF animations work differently: the keyboard supports one animation per destination—the GIF page and the separate power-on slot. Uploading a new GIF to a destination replaces that destination's previous animation.
+
+To make a still image appear at power-on instead of the keyboard's fallback image, select **Also set this still image as the power-on display** when uploading it. This also writes that image as a one-frame power-on animation, replacing any startup GIF in that slot, while keeping the normal picture-gallery upload. Leave it unchecked to keep the existing startup animation unchanged.
 
 The app is tailored for the YUNZII B75 PRO MAX's 160 × 96 screen. **Sync time from PC** sends the computer's current local time and date to the keyboard; make sure Windows' clock and time zone are set correctly first. The power-on animation option uses the boot-animation command described by the yunlcd protocol reference. Firmware support may vary by keyboard model; if your keyboard's firmware does not support boot animations, use the GIF page destination instead.
 
@@ -46,7 +48,9 @@ Use **GIF destination** to choose where the selected animation is stored:
 
 To set a new startup GIF, choose the GIF file, select **Power-on animation** as the destination, then click **Upload GIF**. This writes the animation to the startup slot; it does not switch the screen to the GIF page. The new startup animation is used on a subsequent power-on.
 
-**Clear GIF** clears only the GIF-page animation. **Clear startup image/GIF** clears the boot-animation slot, including a still or single-frame startup image; the selected upload destination does not affect either clear button.
+**Clear GIF** clears only the GIF-page animation. **Clear power-on animation** clears only the boot-animation slot; it does not clear static images uploaded with **Upload image**. The selected upload destination does not affect either clear button.
+
+On the B75 PRO MAX, clearing the power-on animation can leave the animation slot empty while the keyboard still shows a previously uploaded static picture on a later cold boot. That fallback image may no longer appear in the picture gallery or when cycling pictures with Fn+9. Uploading either a GIF or a one-frame still to **Power-on animation** takes precedence at startup; clearing that animation can reveal the fallback image again. This behavior was observed on-device and is not described by the reverse-engineered protocol. The app has no verified command to remove the keyboard's fallback copy.
 
 ## Compatibility
 
