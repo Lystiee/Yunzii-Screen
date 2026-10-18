@@ -24,7 +24,7 @@ Run `build.bat` after `install.bat`. It installs the build tools in the app's `.
 - Adjust still-image brightness from 0% to 200% before upload; GIF animation frames are not brightness-adjusted.
 - Convert frames to the keyboard's RGB565 pixel format.
 - Choose a GIF destination: the GIF page (up to 160 frames) or the power-on animation (up to 64 frames); choose playback speed (1–60 FPS).
-- Append pictures or explicitly replace all picture slots; clear all images, the GIF-page animation, or the power-on animation independently; switch display pages.
+- Append pictures or explicitly replace all picture slots; clear all images, the GIF-page animation, or the startup image/animation independently; switch display pages.
 - Sync the keyboard's date and time from the PC's local clock.
 - Edit screen dimensions and report ID for models not listed in the known-device table.
 - Dark desktop theme with pink button hover highlights and a fixed-size image preview.
@@ -42,11 +42,11 @@ The device stores uploaded pictures and animations in its flash memory. Avoid fr
 Use **GIF destination** to choose where the selected animation is stored:
 
 - **GIF page** stores the animation on the keyboard's GIF page and supports up to 160 frames.
-- **Power-on animation** stores the animation for keyboard startup and supports up to 64 frames.
+- **Power-on animation** stores the graphic shown during keyboard startup and supports up to 64 frames, including a single-frame image.
 
 To set a new startup GIF, choose the GIF file, select **Power-on animation** as the destination, then click **Upload GIF**. This writes the animation to the startup slot; it does not switch the screen to the GIF page. The new startup animation is used on a subsequent power-on.
 
-**Clear GIF** clears only the GIF-page animation. **Clear startup GIF** clears only the power-on animation; the selected upload destination does not affect either clear button.
+**Clear GIF** clears only the GIF-page animation. **Clear startup image/GIF** clears the boot-animation slot, including a still or single-frame startup image; the selected upload destination does not affect either clear button.
 
 ## Compatibility
 

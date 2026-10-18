@@ -286,8 +286,7 @@ class KeyboardScreen:
             raise ValueError("Unknown GIF animation destination.")
         animation = bytes((gif_type, 0))
         self.send(OP_INFO, inner_packet(18, 2, animation))
-        self.finish()
-        self.send(OP_INFO, inner_packet(19, 2, animation))
+        self.send(OP_DATA, inner_packet(19, 2, animation))
         self.finish()
 
     def upload_picture(self, pixels: bytes) -> None:
@@ -600,7 +599,7 @@ class YunziScreen:
             ("Upload GIF", lambda: self._upload("gif"), "Accent.TButton"),
             ("Clear images", self._clear_pictures, "TButton"),
             ("Clear GIF", self._clear_gif, "TButton"),
-            ("Clear startup GIF", self._clear_startup_gif, "TButton"),
+            ("Clear startup image/GIF", self._clear_startup_gif, "TButton"),
         )
         for index, (label, callback, button_style) in enumerate(action_specs):
             button = ttk.Button(actions, text=label, command=callback, style=button_style)
@@ -838,7 +837,12 @@ class YunziScreen:
         gif_type, _frame_limit = ANIMATION_DESTINATIONS[destination]
         if not messagebox.askyesno(
             f"Clear {destination.lower()}?",
-            f"This clears the animation stored as the {destination.lower()}.",
+            (
+                "This clears the boot-animation slot, including a still or single-frame "
+                "startup image."
+                if destination == "Power-on animation"
+                else f"This clears the animation stored as the {destination.lower()}."
+            ),
             parent=self.root,
         ):
             return

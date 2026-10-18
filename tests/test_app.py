@@ -32,7 +32,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(ANIMATION_DESTINATIONS["GIF page"], (1, 160))
         self.assertEqual(ANIMATION_DESTINATIONS["Power-on animation"], (0, 64))
 
-    def test_clear_animation_targets_selected_destination(self):
+    def test_clear_startup_animation_sends_empty_animation_sequence(self):
         screen = KeyboardScreen.__new__(KeyboardScreen)
         screen.send = Mock()
         screen.finish = Mock()
@@ -41,10 +41,10 @@ class ProtocolTests(unittest.TestCase):
             screen.send.call_args_list,
             [
                 call(OP_INFO, inner_packet(18, 2, b"\x00\x00")),
-                call(OP_INFO, inner_packet(19, 2, b"\x00\x00")),
+                call(OP_DATA, inner_packet(19, 2, b"\x00\x00")),
             ],
         )
-        self.assertEqual(screen.finish.call_count, 2)
+        self.assertEqual(screen.finish.call_count, 1)
 
     def test_clear_animation_targets_gif_page_only_by_default(self):
         screen = KeyboardScreen.__new__(KeyboardScreen)
@@ -55,10 +55,10 @@ class ProtocolTests(unittest.TestCase):
             screen.send.call_args_list,
             [
                 call(OP_INFO, inner_packet(18, 2, b"\x01\x00")),
-                call(OP_INFO, inner_packet(19, 2, b"\x01\x00")),
+                call(OP_DATA, inner_packet(19, 2, b"\x01\x00")),
             ],
         )
-        self.assertEqual(screen.finish.call_count, 2)
+        self.assertEqual(screen.finish.call_count, 1)
 
     def test_clear_startup_animation_targets_boot_slot_only(self):
         screen = KeyboardScreen.__new__(KeyboardScreen)
@@ -69,10 +69,10 @@ class ProtocolTests(unittest.TestCase):
             screen.send.call_args_list,
             [
                 call(OP_INFO, inner_packet(18, 2, b"\x00\x00")),
-                call(OP_INFO, inner_packet(19, 2, b"\x00\x00")),
+                call(OP_DATA, inner_packet(19, 2, b"\x00\x00")),
             ],
         )
-        self.assertEqual(screen.finish.call_count, 2)
+        self.assertEqual(screen.finish.call_count, 1)
 
     def test_upload_animation_uses_boot_animation_type(self):
         screen = KeyboardScreen.__new__(KeyboardScreen)
